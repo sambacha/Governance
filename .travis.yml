@@ -1,15 +1,7 @@
-
 os: linux
 dist: xenial
 language: node_js
 node_js: 10
-before_install:
-  - 
-install:
-  - npm install # do not use default npm ci
-script:
-  - sh travis-entry.sh
-  - npm test
-cache:
-  directories:
-    - "node_modules"
+install: npm install 
+scripts: true
+

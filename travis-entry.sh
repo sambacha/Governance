@@ -15,9 +15,10 @@
 set -e # Exit on failure
 mkdir -p build
 
+cat 
 CONTRACTS_DIRECTORY=contracts
-BUILT_FILE=ALLINONE.sol
-SOURCE_FILES="AccessControl.sol ERC165.sol ERC721.sol SupportsInterface.sol SuNFT.sol SuOperation.sol SuPromo.sol SuVending.sol SuMain.sol"
+BUILT_FILE=output_solpp.sol
+SOURCE_FILES="contracts/source_files.txt"
 
 
 ## Test 1 -- Confirm file above exactly match what is in the repo ##############

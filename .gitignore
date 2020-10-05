@@ -16,3 +16,4 @@ private
 build
 node_modules
 old
+__py*
