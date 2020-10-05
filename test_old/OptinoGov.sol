@@ -1,17 +1,66 @@
+// ----------------------------------------------------------------------------
+// Optino Governance
+//
+// Originally based on https://github.com/bartjman/XS2Option/blob/master/contracts/XS2Gov.sol (MIT)
+//
+// Enjoy. (c) The Optino Project 2020
+//
+// SPDX-License-Identifier: GPLv2
+// ----------------------------------------------------------------------------
 pragma solidity ^0.7.0;
 pragma experimental ABIEncoderV2;
 
-// import "https://github.com/ogDAO/Governance/blob/master/contracts/OGTokenInterface.sol";
-// import "https://github.com/ogDAO/Governance/blob/master/contracts/OGDTokenInterface.sol";
-// import "https://github.com/ogDAO/Governance/blob/master/contracts/SafeMath.sol";
 
-import "./OGTokenInterface.sol";
-import "./OGDTokenInterface.sol";
-import "./SafeMath.sol";
+// import "SafeMath.sol";
+/// @notice Safe maths
+library SafeMath {
+    function add(uint a, uint b) internal pure returns (uint c) {
+        c = a + b;
+        require(c >= a, "Add overflow");
+    }
+    function sub(uint a, uint b) internal pure returns (uint c) {
+        require(b <= a, "Sub underflow");
+        c = a - b;
+    }
+    function mul(uint a, uint b) internal pure returns (uint c) {
+        c = a * b;
+        require(a == 0 || c / a == b, "Mul overflow");
+    }
+    function div(uint a, uint b) internal pure returns (uint c) {
+        require(b > 0, "Divide by 0");
+        c = a / b;
+    }
+}
 
 
-/// @notice Optino Governance. (c) The Optino Project 2020
-// SPDX-License-Identifier: GPLv2
+// import "ERC20.sol";
+/// @notice ERC20 https://eips.ethereum.org/EIPS/eip-20 with optional symbol, name and decimals
+interface ERC20 {
+    function totalSupply() external view returns (uint);
+    function balanceOf(address tokenOwner) external view returns (uint balance);
+    function allowance(address tokenOwner, address spender) external view returns (uint remaining);
+    function transfer(address to, uint tokens) external returns (bool success);
+    function approve(address spender, uint tokens) external returns (bool success);
+    function transferFrom(address from, address to, uint tokens) external returns (bool success);
+
+    function symbol() external view returns (string memory);
+    function name() external view returns (string memory);
+    function decimals() external view returns (uint8);
+
+    event Transfer(address indexed from, address indexed to, uint tokens);
+    event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
+}
+
+
+// import "OGTokenInterface.sol";
+/// @notice OGTokenInterface = ERC20 + mint + burn
+interface OGTokenInterface is ERC20 {
+    function mint(address tokenOwner, uint tokens) external returns (bool success);
+    function burn(uint tokens) external returns (bool success);
+    // function burnFrom(address tokenOwner, uint tokens) external returns (bool success);
+}
+
+
 contract OptinoGov {
     using SafeMath for uint;
 
@@ -50,16 +99,15 @@ contract OptinoGov {
         bool executed;
     }
 
-    OGTokenInterface public ogToken;
-    OGDTokenInterface public ogdToken;
-    uint public maxLockTerm = 1000 seconds; // Testing 365 days;
+    OGTokenInterface public token;
+    uint public maxLockTerm = 10000;
     uint public rewardsPerSecond = 150000000000000000;
     uint public proposalCost = 100000000000000000000; // 100 tokens assuming 18 decimals
     uint public proposalThreshold = 1 * 10 ** 15; // 0.1%, 18 decimals
     uint public quorum = 2 * 10 ** 17; // 20%, 18 decimals
     uint public quorumDecayPerSecond = 4 * 10 ** 17 / uint(60 * 60 * 24 * 365); // 40% per year, i.e., 0 in 6 months
-    uint public votingDuration = 10 seconds; // 3 days;
-    uint public executeDelay = 10 seconds; // 2 days;
+    uint public votingDuration = 3 hours; // 3 days;
+    uint public executeDelay = 2 hours; // 2 days;
     uint public rewardPool;
     uint public totalVotes;
     mapping(address => Lock) public locks; // Locked tokens per address
@@ -93,39 +141,38 @@ contract OptinoGov {
         _;
     }
 
-    constructor(OGTokenInterface _ogToken, OGDTokenInterface _ogdToken) {
-        ogToken = _ogToken;
-        ogdToken = _ogdToken;
+    constructor(OGTokenInterface token_) {
+        token = token_;
     }
-    function setMaxLockTerm(uint _maxLockTerm) external onlySelf {
+    function setMaxLockTerm(uint _maxLockTerm) external {
         maxLockTerm = _maxLockTerm;
         emit MaxLockTermUpdated(maxLockTerm);
     }
-    function setRewardsPerSecond(uint _rewardsPerSecond) external onlySelf {
+    function setRewardsPerSecond(uint _rewardsPerSecond) external {
         rewardsPerSecond = _rewardsPerSecond;
         emit RewardsPerSecondUpdated(rewardsPerSecond);
     }
-    function setProposalCost(uint _proposalCost) external onlySelf {
+    function setProposalCost(uint _proposalCost) external {
         proposalCost = _proposalCost;
         emit ProposalCostUpdated(proposalCost);
     }
-    function setProposalThreshold(uint _proposalThreshold) external onlySelf {
+    function setProposalThreshold(uint _proposalThreshold) external {
         proposalThreshold = _proposalThreshold;
         emit ProposalThresholdUpdated(proposalThreshold);
     }
-    function setQuorum(uint _quorum) external onlySelf {
+    function setQuorum(uint _quorum) external {
         quorum = _quorum;
         emit QuorumUpdated(quorum);
     }
-    function setQuorumDecayPerSecond(uint _quorumDecayPerSecond) external onlySelf {
+    function setQuorumDecayPerSecond(uint _quorumDecayPerSecond) external {
         quorumDecayPerSecond = _quorumDecayPerSecond;
         emit QuorumDecayPerSecondUpdated(quorumDecayPerSecond);
     }
-    function setVotingDuration(uint _votingDuration) external onlySelf {
+    function setVotingDuration(uint _votingDuration) external {
         votingDuration = _votingDuration;
         emit VotingDurationUpdated(votingDuration);
     }
-    function setExecuteDelay(uint _executeDelay) external onlySelf {
+    function setExecuteDelay(uint _executeDelay) external {
         executeDelay = _executeDelay;
         emit ExecuteDelayUpdated(executeDelay);
     }
@@ -218,7 +265,7 @@ contract OptinoGov {
         _staked = lock.stakes[stakingKey];
     }
 
-    function burnStake(address[] calldata tokenOwners, bytes32 stakingKey, uint percent) external onlySelf {
+    function burnStake(address[] calldata tokenOwners, bytes32 stakingKey, uint percent) external {
         for (uint i = 0; i < tokenOwners.length; i++) {
             address tokenOwner = tokenOwners[i];
             Lock storage lock = locks[tokenOwner];
@@ -228,7 +275,7 @@ contract OptinoGov {
                 lock.staked = lock.staked.sub(tokensToBurn);
                 lock.stakes[stakingKey] = lock.stakes[stakingKey].sub(tokensToBurn);
                 lock.locked = lock.locked.sub(tokensToBurn);
-                require(ogToken.burn(tokensToBurn), "OptinoGov: burn failed");
+                require(token.burn(tokensToBurn), "OptinoGov: burn failed");
                 emit StakeBurnt(tokenOwner, tokensToBurn, lock.stakes[stakingKey], stakingKey);
             }
         }
@@ -259,8 +306,7 @@ contract OptinoGov {
         user.votes = user.locked.mul(duration).div(maxLockTerm);
         totalVotes = totalVotes.add(user.votes);
 
-        require(ogToken.transferFrom(msg.sender, address(this), tokens), "OptinoGov: OGToken.transferFrom failed");
-        require(ogdToken.mint(msg.sender, tokens), "OptinoGov: OGDToken.mint failed");
+        require(token.transferFrom(msg.sender, address(this), tokens), "OptinoGov: transferFrom failed");
 
         emit Locked(msg.sender, tokens, user.locked, user.duration, user.end, user.votes, rewardPool, totalVotes);
     }
@@ -305,7 +351,7 @@ contract OptinoGov {
         uint payout = user.locked;
         user.locked = 0;
 
-        require(ogToken.transfer(msg.sender, payout), "OptinoGov: transfer failed");
+        require(token.transfer(msg.sender, payout), "OptinoGov: transfer failed");
 
         emit Unlocked(msg.sender, payout, tokens, user.duration, user.end, user.votes, rewardPool, totalVotes);
     }
