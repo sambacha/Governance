@@ -1,7 +1,18 @@
 os: linux
 dist: xenial
-language: node_js
-node_js: 10
-install: npm install 
-scripts: true
 
+language: node_js
+
+node_js:
+  - 12
+  - 10
+
+install:
+  - yarn global add codecov
+
+script:
+  - touch .infura
+  - touch .secret
+  - yarn
+  - yarn coverage
+  - codecov
