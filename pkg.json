@@ -1,0 +1,23 @@
+{
+  "name": "ogdao",
+  "version": "1.0.0",
+  "description": "Status: **Work In Progress**",
+  "main": "truffle-config.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sambacha/Governance.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sambacha/Governance/issues"
+  },
+  "homepage": "https://github.com/sambacha/Governance#readme"
+}

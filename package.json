@@ -1,0 +1,41 @@
+{
+  "name": "ogdao",
+  "version": "1.0.0",
+  "description": "Status: **Work In Progress**",
+	"main": "truffle-config.js",
+	"files": [
+    "/contracts/**/*.sol",
+    "/build/contracts/*.json",
+    "!/contracts/mocks",
+    "!/contracts/testing",
+    "/test/behaviors"
+  ],
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mkdir -p build-test; cp contracts/* tests/* build-test; perl -pi -e 's|../contracts/||' build-test/*; remix-tests build-test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sambacha/Governance.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sambacha/Governance/issues"
+  },
+  "homepage": "https://github.com/sambacha/Governance#readme",
+  "dependencies": {
+    "@truffle/debug-utils": "^4.2.10",
+    "bignumber.js": "^9.0.1"
+  },
+  "devDependencies": {
+    "chai-bignumber": "^3.0.0",
+    "remix-tests": "^0.1.34",
+    "solidity-coverage": "^0.7.10",
+    "solpp": "^0.11.2"
+  }
+}

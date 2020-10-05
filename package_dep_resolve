@@ -1,0 +1,12 @@
+#!/bin/bash
+#5.0.0(1)-release (x86_64-apple-darwin19.3.0)
+
+cat package-lock.json | jq '.dependencies[].resolved'
+node -v > .nvmrc
+# npm i -g solpp 
+solpp -o $PWD/output-solpp.sol contracts/*.sol
+mkdir -p build-test; cp contracts/* tests/* build-test; perl -pi -e 's|../contracts/||' build-test/*; remix-tests build-test
+
+#grep \"bytecode\" build/contracts/* | awk '{print $1 " " length($3)/2}'
+#grep \"bytecode\" $PWD | awk '{print $1 " " length($3)/2}'
+
